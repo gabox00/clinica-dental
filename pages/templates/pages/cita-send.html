@@ -1,0 +1,166 @@
+{% load filters %}
+{% block content %}
+    <div id="calendar" class="card" style="padding: 20px;"></div>
+    <script>
+        let typesOf = [
+            {% for typeOf in typesOf %}
+                {
+                    id: '{{typeOf.id}}',
+                    name: '{{typeOf.name}}'
+                },
+            {% endfor %}                         
+        ]
+        let professionals = [
+            {% for employee in employees %}
+                {
+                    id: '{{employee.id}}',
+                    name: '{{employee.first_name}}'
+                },
+            {% endfor %}                       
+        ]
+        document.addEventListener('DOMContentLoaded', function(){
+            var calendarUI = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarUI, {
+                schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
+                headerToolbar: {
+                    right: 'prev next today',
+                    left: 'title',
+                },
+                events: [
+                    {% for cita in citas %}
+                        {
+                            title: '{{cita.date | date:"H:i" }} - {{cita.typeof}}',
+                            start: '{{cita.date | date:"Y-m-d" }}',
+                            end: '{{cita.date | date:"Y-m-d" }}',
+                            cita: {
+                                id: '{{cita.id}}',
+                                date: '{{cita.date | date:"Y-m-d" }}',
+                                hora: '{{cita.date | date:"h:i:s" }}',
+                                tipo: '{{cita.typeof_id}}',
+                                profesional: '{{cita.employee_id}}',
+                                comment: '{{cita.comments}}'
+                            },
+                            backgroundColor: '{{cita.status | colorStatus}}',
+                            borderColor: '{{cita.status | colorStatus}}'
+                        },
+                    {% endfor %}
+                ],
+                dateClick: function(info) {
+                    clearInputs();
+                    hideButtons();
+                    $('.agregar').show();
+                    $('#modalTitle').html("Agregar Cita");
+                    typesOf.forEach(function(type){
+                        agregar($('#tipoCita'),type);
+                    });
+                    professionals.forEach(function(professionals){
+                        agregar($('#profesional'),professionals);
+                    });
+                    $('#date').attr("value",info.dateStr);
+                    $('#exampleModal').modal('show');
+                },
+                eventClick: function(el,jsEvent,view){
+                    clearInputs();
+                    showButtons();
+                    $('.agregar').hide();
+                    let cita = el.event._def.extendedProps.cita;
+                    let tipoOptionSelected = optionSelected("#tipoCita",cita.tipo);
+                    let profesionalOptionSelected = optionSelected("#profesional",cita.profesional);
+                    typesOf.forEach(function(typeOf){
+                        agregar($('#tipoCita'),typeOf);
+                    });
+                    professionals.forEach(function(professional){
+                        agregar($('#profesional'),professional);
+                    });
+                    $(profesionalOptionSelected).attr("selected",true)
+                    $(tipoOptionSelected).attr("selected",true)
+                    $('#modalTitle').html(el.el.innerText);
+                    $('#date').attr("value",cita.date);
+                    $('#time').attr("value",cita.hora);
+                    $('#idCita').attr("value",cita.id);
+                    if(cita.comment != ""){
+                        $('.comment').html(cita.comment);
+                    }
+                    else{
+                        $('.flagComments').hide()
+                    }
+                    $('#exampleModal').modal();
+                },
+            });
+            calendar.render();
+            calendar.setOption('locale','es');
+        });
+        const optionSelected = (option,val) => {
+            let optionSelected = option+" option[value='"+val+"']";
+            return optionSelected;
+        } 
+        const agregar = (select,val) => {
+            const option = document.createElement('option');
+            const valor = val
+            option.value = valor.id;
+            option.text = valor.name;
+            select.append(option);
+        };
+        const clearInputs = () => {
+            $('#time').attr("value",'');
+            $('#profesional').empty();
+            $('#tipoCita').empty()
+            $('.comment').empty()
+        };
+        const hideButtons = () => {
+            $('.eliminar').hide();
+            $('.editar').hide();
+            $('.flagComments').hide()
+        };
+        const showButtons = () => {
+            $('.eliminar').show();
+            $('.editar').show();
+            $('.flagComments').show()
+        };
+    </script>
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle"></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="flexContent">
+                        <form id="citaForm" method="post" action="{% url 'crudCita' %}">
+                            {% csrf_token %}
+
+                            <input type="hidden" id="date" name="date" value=''/>
+                            <input type="hidden" id="idCita" name="idCita" value=''/>
+
+                            <label for="time">Hora:</label>
+                            <input id="time" type="time" name="time" value=""/>
+
+                            <label for="tipoCita">Tipo:</label>
+                            <select name="tipoCita" id="tipoCita"></select>
+
+                            <label for="profesional">Profesional:</label>
+                            <select name="profesional" id="profesional"></select>
+
+                            <div class="flagComments">
+                                <label for="comentarios" class="comments">Comentarios:</label>
+                                <textarea class="comment" name="comentarios" readonly></textarea>
+                            </div>
+
+                        </form>
+                    </div>                
+                </div>
+                <div class="modal-footer">
+                    <input type="submit" form="citaForm" class="btn btn-danger eliminar" name="btn-eliminar" value="Eliminar"/>
+                    <input type="submit" form="citaForm" class="btn btn-warning editar" name="btn-editar" value="Guardar"/>
+                    <input type="submit" form="citaForm" class="btn btn-success agregar" name="btn-agregar" value="Agregar"/>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

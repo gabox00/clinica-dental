@@ -1,0 +1,16 @@
+{% extends 'layouts/layout.html' %}
+{% block content %}
+    <h2>Inicio</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert-success">
+                {{message}}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if user.email %}
+        <p>{{user.first_name}} {{user.last_name}}</p>
+    {% endif %}
+{% endblock %}

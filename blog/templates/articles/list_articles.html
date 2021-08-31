@@ -1,0 +1,15 @@
+{% extends 'layouts/layout.html' %}
+{% block content %}
+
+    <h2>Articulos</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message">{{message}}</div>
+        {% endfor %}
+    {% endif %}
+
+    {% include 'articles/articles.html' %}
+    {% include 'articles/pagination.html' %}
+
+{% endblock%}

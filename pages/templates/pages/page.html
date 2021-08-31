@@ -1,0 +1,14 @@
+{% extends 'layouts/layout.html' %}
+{% block content %}
+    <h2>{{page.title}}</h2>
+    {% if page.slug == 'cita' and not user.employee %}
+        <div id="leyenda">
+            <div class="cuadrado"><div class="box azul"></div>Cita En espera</div>
+            <div class="cuadrado"><div class="box verde"></div>Cita Aceptada</div>
+            <div class="cuadrado"><div class="box rojo"></div>Cita Denegada</div>
+        </div>
+        {% include "pages/cita-send.html" %}
+    {% else %}
+        {% include "pages/cita-receive.html" %}        
+    {% endif %}
+{% endblock %}
